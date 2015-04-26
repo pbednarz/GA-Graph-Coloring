@@ -1,8 +1,10 @@
 package pl.edu.prz.isk.t4;
 
 /**
+ * Klasa reprezentująca krawędź, parę wierzchołków grafu
  *
- * @author pbednarz
+ * @author Piotr Bednarz
+ * @author Piotr Bajorek
  */
 class IntEdgePair {
 
@@ -21,5 +23,4 @@ class IntEdgePair {
     public int getVertexDst() {
         return vertexDst;
     }
-
 }
