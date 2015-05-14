@@ -8,8 +8,10 @@ import com.softtechdesign.ga.GAStringsSeq;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Level;
@@ -24,13 +26,13 @@ import java.util.logging.Logger;
  */
 public class GAGraphColoring extends GAStringsSeq {
 
-    private static final DataSet currentData = DataSet.MYCIEL5;
+    private static final DataSet currentData = DataSet.QUEEN8_8;
     final static String fileName = currentData.getFilename();
 
     static String[] possibleColors;
     static int[] graphVertices;
     static ArrayList<IntEdgePair> graphEdges;
-    static boolean[][] adjacencyMatrix;
+    static Random rand = new Random(System.currentTimeMillis());
     
     public GAGraphColoring() throws GAException {
         super(graphVertices.length, //size of chromosome
@@ -85,21 +87,27 @@ public class GAGraphColoring extends GAStringsSeq {
 
     @Override
     protected double getFitness(int chromeIndex) {
-        Set<String> usedColors = new HashSet<>(graphVertices.length);
+        
         ChromStrings chromosome = getChromosome(chromeIndex);
         String genes[] = chromosome.getGenes();
-        int numOfCorrectEdges = 0;
+        Set<String> usedColors = new HashSet<>(Arrays.asList(genes));
         for (IntEdgePair graphEdge : graphEdges) {
             String colorDst = genes[graphEdge.getVertexDst() - 1];
             String colorSrc = genes[graphEdge.getVertexSrc() - 1];
 
-            if (!colorDst.equals(colorSrc)) {
-                numOfCorrectEdges++;
-                usedColors.add(colorDst);
-                usedColors.add(colorSrc);
+            if (colorDst.equals(colorSrc)) {
+                Set<String> intersection = new HashSet<String>(Arrays.asList(possibleColors));
+                intersection.removeAll(usedColors);
+                String[] entries = intersection.toArray(new String[intersection.size()]);
+                String randomColor = entries[rand.nextInt(entries.length)];
+                chromosome.setGene(randomColor, graphEdge.getVertexDst() - 1);
+                usedColors.add(randomColor);
             }
         }
-        return numOfCorrectEdges + ((numOfCorrectEdges == graphEdges.size()) ? (graphVertices.length + 1 - usedColors.size()) : 0);
+        
+        
+        
+        return (graphVertices.length + 1 - usedColors.size());
     }
 
     public static void readFile(String fileName) throws FileNotFoundException {
@@ -117,7 +125,6 @@ public class GAGraphColoring extends GAStringsSeq {
             graphEdges.add(new IntEdgePair(verticeIndexStart, verticeIndexEnd));
         }
         numOfVertices = vertices.size();
-        adjacencyMatrix = new boolean[numOfVertices][numOfVertices];
         graphVertices = new int[numOfVertices];
         int index = 0;
         for (Integer i : vertices) {
