@@ -8,12 +8,10 @@ import com.softtechdesign.ga.GAStringsSeq;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,15 +24,16 @@ import java.util.logging.Logger;
  */
 public class GAGraphColoring extends GAStringsSeq {
 
-    private static final DataSet currentData = DataSet.QUEEN6_6;
+    private static final DataSet currentData = DataSet.GRAF_PELNY_5;
     final static String fileName = currentData.getFilename();
 
     static String[] possibleColors;
     static int[] graphVertices;
     static ArrayList<IntEdgePair> graphEdges;
+    static boolean[][] adjacencyMatrix;
 
     private final static int CORRECTNESS_WEIGHT = 1;
-    private final static int COLORING_WEIGHT = 4;
+    private final static int COLORING_WEIGHT = 1;
 
     public GAGraphColoring() throws GAException {
         super(graphVertices.length, //size of chromosome
@@ -65,7 +64,7 @@ public class GAGraphColoring extends GAStringsSeq {
             if (!threadGraph.isAlive()) {
                 if (ga.getFittestChromosomesFitness() != 0) {
                     boolean isValid = true;
-                    Map<String, AtomicInteger> usedColors = new HashMap<>();
+                    Set<String> usedColors = new HashSet<>(graphVertices.length);
                     ChromStrings chromosome = (ChromStrings) ga.getFittestChromosome();
                     String genes[] = chromosome.getGenes();
                     for (IntEdgePair graphEdge : graphEdges) {
@@ -75,9 +74,7 @@ public class GAGraphColoring extends GAStringsSeq {
                             isValid = false;
                         }
                     }
-                    for (String gen : genes) {
-                        addToMap(usedColors, gen);
-                    }
+                    Collections.addAll(usedColors, genes);
                     int numOfUsedColors = usedColors.size();
                     System.out.println("Is coloring valid: " + isValid);
                     System.out.println("Number of used colors in solution: " + numOfUsedColors);
@@ -91,16 +88,16 @@ public class GAGraphColoring extends GAStringsSeq {
 
     @Override
     protected double getFitness(int chromeIndex) {
-        Map<String, AtomicInteger> usedColors = new HashMap<>();
+        Set<String> usedColors = new HashSet<>(graphVertices.length);
         ChromStrings chromosome = getChromosome(chromeIndex);
         String genes[] = chromosome.getGenes();
         int numOfCorrectEdges = 0;
         for (IntEdgePair graphEdge : graphEdges) {
             String colorDst = genes[graphEdge.getVertexDst() - 1];
-            String colorSrc = genes[graphEdge.getVertexDst() - 1];
-            addToMap(usedColors, colorDst);
-            addToMap(usedColors, colorSrc);
-            if (!genes[graphEdge.getVertexSrc() - 1].equals(genes[graphEdge.getVertexDst() - 1])) {
+            String colorSrc = genes[graphEdge.getVertexSrc() - 1];
+            usedColors.add(colorDst);
+            usedColors.add(colorSrc);
+            if (!colorDst.equals(colorSrc)) {
                 numOfCorrectEdges++;
             }
         }
@@ -122,6 +119,7 @@ public class GAGraphColoring extends GAStringsSeq {
             graphEdges.add(new IntEdgePair(verticeIndexStart, verticeIndexEnd));
         }
         numOfVertices = vertices.size();
+        adjacencyMatrix = new boolean[numOfVertices][numOfVertices];
         graphVertices = new int[numOfVertices];
         int index = 0;
         for (Integer i : vertices) {
@@ -142,15 +140,6 @@ public class GAGraphColoring extends GAStringsSeq {
             } else {
                 return intToStringSeq(index / 26) + intToStringSeq(index % 26);
             }
-        }
-    }
-
-    static void addToMap(Map<String, AtomicInteger> map, String name) {
-        AtomicInteger value = map.get(name);
-        if (value == null) {
-            map.put(name, new AtomicInteger(1));
-        } else {
-            value.incrementAndGet();
         }
     }
 }
