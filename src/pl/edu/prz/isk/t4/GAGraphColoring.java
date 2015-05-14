@@ -4,6 +4,7 @@ import com.softtechdesign.ga.ChromStrings;
 import com.softtechdesign.ga.Crossover;
 import com.softtechdesign.ga.GAException;
 import com.softtechdesign.ga.GAStringsSeq;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -25,12 +26,15 @@ import java.util.logging.Logger;
  */
 public class GAGraphColoring extends GAStringsSeq {
 
-    private static final DataSet currentData = DataSet.GRAF_CYKLICZNY_9;
+    private static final DataSet currentData = DataSet.QUEEN6_6;
     final static String fileName = currentData.getFilename();
 
     static String[] possibleColors;
     static int[] graphVertices;
     static ArrayList<IntEdgePair> graphEdges;
+
+    private final static int CORRECTNESS_WEIGHT = 1;
+    private final static int COLORING_WEIGHT = 4;
 
     public GAGraphColoring() throws GAException {
         super(graphVertices.length, //size of chromosome
@@ -51,6 +55,8 @@ public class GAGraphColoring extends GAStringsSeq {
         try {
             readFile(fileName);
             System.out.println("Running GA on: " + fileName);
+            System.out.println("Vertices: " + graphVertices.length);
+            System.out.println("Edges: " + graphEdges.size());
             GAGraphColoring ga = new GAGraphColoring();
             Thread threadGraph = new Thread(ga);
             threadGraph.setPriority(Thread.MAX_PRIORITY);
@@ -58,8 +64,24 @@ public class GAGraphColoring extends GAStringsSeq {
             threadGraph.join();
             if (!threadGraph.isAlive()) {
                 if (ga.getFittestChromosomesFitness() != 0) {
-                    int numOfUsedColors = (graphVertices.length + 1 - (int) ga.getFittestChromosomesFitness());
+                    boolean isValid = true;
+                    Map<String, AtomicInteger> usedColors = new HashMap<>();
+                    ChromStrings chromosome = (ChromStrings) ga.getFittestChromosome();
+                    String genes[] = chromosome.getGenes();
+                    for (IntEdgePair graphEdge : graphEdges) {
+                        String colorDst = genes[graphEdge.getVertexDst() - 1];
+                        String colorSrc = genes[graphEdge.getVertexSrc() - 1];
+                        if (colorSrc.equals(colorDst)) {
+                            isValid = false;
+                        }
+                    }
+                    for (String gen : genes) {
+                        addToMap(usedColors, gen);
+                    }
+                    int numOfUsedColors = usedColors.size();
+                    System.out.println("Is coloring valid: " + isValid);
                     System.out.println("Number of used colors in solution: " + numOfUsedColors);
+                    System.out.println("Expected optimal number of colors: " + currentData.getChromaticNumber());
                 }
             }
         } catch (FileNotFoundException | GAException | InterruptedException ex) {
@@ -72,15 +94,17 @@ public class GAGraphColoring extends GAStringsSeq {
         Map<String, AtomicInteger> usedColors = new HashMap<>();
         ChromStrings chromosome = getChromosome(chromeIndex);
         String genes[] = chromosome.getGenes();
+        int numOfCorrectEdges = 0;
         for (IntEdgePair graphEdge : graphEdges) {
+            String colorDst = genes[graphEdge.getVertexDst() - 1];
+            String colorSrc = genes[graphEdge.getVertexDst() - 1];
+            addToMap(usedColors, colorDst);
+            addToMap(usedColors, colorSrc);
             if (!genes[graphEdge.getVertexSrc() - 1].equals(genes[graphEdge.getVertexDst() - 1])) {
-                addToMap(usedColors, genes[graphEdge.getVertexDst() - 1]);
-                addToMap(usedColors, genes[graphEdge.getVertexSrc() - 1]);
-            } else {
-                return 0;
+                numOfCorrectEdges++;
             }
         }
-        return (graphVertices.length + 1 - usedColors.size());
+        return numOfCorrectEdges * CORRECTNESS_WEIGHT + (graphVertices.length + 1 - usedColors.size()) * COLORING_WEIGHT;
     }
 
     public static void readFile(String fileName) throws FileNotFoundException {
@@ -121,7 +145,7 @@ public class GAGraphColoring extends GAStringsSeq {
         }
     }
 
-    void addToMap(Map<String, AtomicInteger> map, String name) {
+    static void addToMap(Map<String, AtomicInteger> map, String name) {
         AtomicInteger value = map.get(name);
         if (value == null) {
             map.put(name, new AtomicInteger(1));
