@@ -24,17 +24,14 @@ import java.util.logging.Logger;
  */
 public class GAGraphColoring extends GAStringsSeq {
 
-    private static final DataSet currentData = DataSet.GRAF_PELNY_5;
+    private static final DataSet currentData = DataSet.MYCIEL5;
     final static String fileName = currentData.getFilename();
 
     static String[] possibleColors;
     static int[] graphVertices;
     static ArrayList<IntEdgePair> graphEdges;
     static boolean[][] adjacencyMatrix;
-
-    private final static int CORRECTNESS_WEIGHT = 1;
-    private final static int COLORING_WEIGHT = 1;
-
+    
     public GAGraphColoring() throws GAException {
         super(graphVertices.length, //size of chromosome
                 200, //population has N chromosomes
@@ -95,13 +92,14 @@ public class GAGraphColoring extends GAStringsSeq {
         for (IntEdgePair graphEdge : graphEdges) {
             String colorDst = genes[graphEdge.getVertexDst() - 1];
             String colorSrc = genes[graphEdge.getVertexSrc() - 1];
-            usedColors.add(colorDst);
-            usedColors.add(colorSrc);
+
             if (!colorDst.equals(colorSrc)) {
                 numOfCorrectEdges++;
+                usedColors.add(colorDst);
+                usedColors.add(colorSrc);
             }
         }
-        return numOfCorrectEdges * CORRECTNESS_WEIGHT + (graphVertices.length + 1 - usedColors.size()) * COLORING_WEIGHT;
+        return numOfCorrectEdges + ((numOfCorrectEdges == graphEdges.size()) ? (graphVertices.length + 1 - usedColors.size()) : 0);
     }
 
     public static void readFile(String fileName) throws FileNotFoundException {
