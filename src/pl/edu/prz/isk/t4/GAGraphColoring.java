@@ -24,14 +24,13 @@ import java.util.logging.Logger;
  */
 public class GAGraphColoring extends GAStringsSeq {
 
-    private static final DataSet currentData = DataSet.MYCIEL5;
+    private static final DataSet currentData = DataSet.QUEEN6_6;
     final static String fileName = currentData.getFilename();
 
     static String[] possibleColors;
     static int[] graphVertices;
     static ArrayList<IntEdgePair> graphEdges;
-    static boolean[][] adjacencyMatrix;
-    
+
     public GAGraphColoring() throws GAException {
         super(graphVertices.length, //size of chromosome
                 200, //population has N chromosomes
@@ -94,12 +93,13 @@ public class GAGraphColoring extends GAStringsSeq {
             String colorSrc = genes[graphEdge.getVertexSrc() - 1];
 
             if (!colorDst.equals(colorSrc)) {
-                numOfCorrectEdges++;
                 usedColors.add(colorDst);
                 usedColors.add(colorSrc);
+            } else {
+                return 0;
             }
         }
-        return numOfCorrectEdges + ((numOfCorrectEdges == graphEdges.size()) ? (graphVertices.length + 1 - usedColors.size()) : 0);
+        return (graphVertices.length + 1 - usedColors.size());
     }
 
     public static void readFile(String fileName) throws FileNotFoundException {
@@ -117,7 +117,6 @@ public class GAGraphColoring extends GAStringsSeq {
             graphEdges.add(new IntEdgePair(verticeIndexStart, verticeIndexEnd));
         }
         numOfVertices = vertices.size();
-        adjacencyMatrix = new boolean[numOfVertices][numOfVertices];
         graphVertices = new int[numOfVertices];
         int index = 0;
         for (Integer i : vertices) {

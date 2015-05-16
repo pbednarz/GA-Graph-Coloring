@@ -16,7 +16,7 @@ public enum DataSet {
     /**
      * Drzewo binarne o rozmiarze 3 i wysokości 1
      */
-    BINARY_TREE_3("data/drzewo_binarne_3.txt", 3, 2, 3),
+    BINARY_TREE_3("data/drzewo_binarne_3.txt", 3, 2, 2),
 
     /**
      * Graf regularny, 2 stopnia, cykliczny o parzystej liczbie wierzchołków
