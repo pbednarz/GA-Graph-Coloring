@@ -26,7 +26,7 @@ import java.util.logging.Logger;
  */
 public class GAGraphColoring extends GAStringsSeq {
 
-    private static final DataSet currentData = DataSet.QUEEN8_8;
+    private static final DataSet currentData = DataSet.QUEEN6_6;
     final static String fileName = currentData.getFilename();
 
     static String[] possibleColors;
