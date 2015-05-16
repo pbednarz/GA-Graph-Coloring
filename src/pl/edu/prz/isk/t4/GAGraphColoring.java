@@ -24,13 +24,12 @@ import java.util.logging.Logger;
  */
 public class GAGraphColoring extends GAStringsSeq {
 
-    private static final DataSet currentData = DataSet.MYCIEL5;
+    private static final DataSet currentData = DataSet.QUEEN8_8;
     final static String fileName = currentData.getFilename();
 
     static String[] possibleColors;
     static int[] graphVertices;
     static ArrayList<IntEdgePair> graphEdges;
-    static boolean[][] adjacencyMatrix;
     
     public GAGraphColoring() throws GAException {
         super(graphVertices.length, //size of chromosome
@@ -117,7 +116,6 @@ public class GAGraphColoring extends GAStringsSeq {
             graphEdges.add(new IntEdgePair(verticeIndexStart, verticeIndexEnd));
         }
         numOfVertices = vertices.size();
-        adjacencyMatrix = new boolean[numOfVertices][numOfVertices];
         graphVertices = new int[numOfVertices];
         int index = 0;
         for (Integer i : vertices) {
