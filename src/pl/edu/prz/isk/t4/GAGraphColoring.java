@@ -8,8 +8,11 @@ import com.softtechdesign.ga.GAStringsSeq;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Level;
@@ -24,22 +27,23 @@ import java.util.logging.Logger;
  */
 public class GAGraphColoring extends GAStringsSeq {
 
-    private static final DataSet currentData = DataSet.QUEEN6_6;
+    private static final DataSet currentData = DataSet.MYCIEL3;
     final static String fileName = currentData.getFilename();
-
     static String[] possibleColors;
     static int[] graphVertices;
     static ArrayList<IntEdgePair> graphEdges;
+    static Random rand = new Random(System.currentTimeMillis());
+    static List<String> possibleColorsList;
 
     public GAGraphColoring() throws GAException {
         super(graphVertices.length, //size of chromosome
                 200, //population has N chromosomes
-                0.7, //crossover probability
+                0.4, //crossover probability
                 10, //random selection chance % (regardless of fitness)
-                2000, //max generations
+                1000, //max generations
                 0, //num prelim runs (to build good breeding stock for final/full run)
                 20, //max generations per prelim run
-                0.06, //chromosome mutation prob.
+                0.4, //chromosome mutation prob.
                 0, //number of decimal places in chrom
                 possibleColors, //gene space (possible gene values)
                 Crossover.ctTwoPoint, //crossover type
@@ -84,21 +88,53 @@ public class GAGraphColoring extends GAStringsSeq {
 
     @Override
     protected double getFitness(int chromeIndex) {
-        Set<String> usedColors = new HashSet<>(graphVertices.length);
         ChromStrings chromosome = getChromosome(chromeIndex);
         String genes[] = chromosome.getGenes();
-        int numOfCorrectEdges = 0;
+        Set<String> usedColors = new HashSet<>(Arrays.asList(genes));
         for (IntEdgePair graphEdge : graphEdges) {
             String colorDst = genes[graphEdge.getVertexDst() - 1];
             String colorSrc = genes[graphEdge.getVertexSrc() - 1];
 
-            if (!colorDst.equals(colorSrc)) {
-                usedColors.add(colorDst);
-                usedColors.add(colorSrc);
-            } else {
+            if (colorDst.equals(colorSrc)) {
                 return 0;
             }
         }
+        return (graphVertices.length + 1 - usedColors.size());
+    }
+
+    protected double getFitness2(int chromeIndex) {
+        ChromStrings chromosome = getChromosome(chromeIndex);
+        String genes[] = chromosome.getGenes();
+        Set<String> usedColors = new HashSet<>(Arrays.asList(genes));
+        int numOfCorrectEdges = graphEdges.size();
+        for (IntEdgePair graphEdge : graphEdges) {
+            String colorDst = genes[graphEdge.getVertexDst() - 1];
+            String colorSrc = genes[graphEdge.getVertexSrc() - 1];
+            if (colorDst.equals(colorSrc)) {
+                numOfCorrectEdges--;
+            }
+        }
+        return numOfCorrectEdges + ((numOfCorrectEdges == graphEdges.size()) ? (graphVertices.length + 1 - usedColors.size()) : 0);
+    }
+
+    protected double getFitness3(int chromeIndex) {
+        ChromStrings chromosome = getChromosome(chromeIndex);
+        String genes[] = chromosome.getGenes();
+        Set<String> usedColors = new HashSet<>(Arrays.asList(genes));
+        for (IntEdgePair graphEdge : graphEdges) {
+            String colorDst = genes[graphEdge.getVertexDst() - 1];
+            String colorSrc = genes[graphEdge.getVertexSrc() - 1];
+
+            if (colorDst.equals(colorSrc)) {
+                Set<String> intersection = new HashSet<>(possibleColorsList);
+                intersection.removeAll(usedColors);
+                String[] entries = intersection.toArray(new String[intersection.size()]);
+                String randomColor = entries[rand.nextInt(entries.length)];
+                chromosome.setGene(randomColor, graphEdge.getVertexDst() - 1);
+                usedColors.add(randomColor);
+            }
+        }
+
         return (graphVertices.length + 1 - usedColors.size());
     }
 
@@ -126,6 +162,7 @@ public class GAGraphColoring extends GAStringsSeq {
         for (int i = 0; i < numOfVertices; i++) {
             possibleColors[i] = intToStringSeq(i + 1);
         }
+        possibleColorsList = Arrays.asList(possibleColors);
     }
 
     public static String intToStringSeq(int index) {

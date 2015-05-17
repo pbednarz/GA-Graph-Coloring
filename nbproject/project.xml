@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.java.j2seproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
-            <name>ISK.R4_L01_T4.P_Bednarz_P_Bajorek</name>
+            <name>ISK</name>
             <source-roots>
                 <root id="src.src.dir"/>
             </source-roots>
